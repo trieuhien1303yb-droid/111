@@ -15,7 +15,7 @@ jobs:
       uses: projectdiscovery/nuclei-action@main
       with:
         target: "https://checkccv.kiwi/?action=home&category=5"
-        # Chỉ quét các lỗi nghiêm trọng và phổ biến liên quan đến web/vulnerability
-        tags: cve,sqli,lfi,xss,generic
-        # Cấu hình ẩn mình và né Rate Limit
-        flags: "-rate-limit 1 -bulk-size 1 -concurrency 1 -random-agent"
+        tags: sqli,xss,lfi
+        # Đưa các tham số thành các cấu hình riêng biệt để tránh lỗi exit code 2
+        rate-limit: 1
+        concurrency: 1

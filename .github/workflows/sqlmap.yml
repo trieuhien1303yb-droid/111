@@ -1,16 +1,16 @@
-name: Decode and Extract Payload
+name: Decode Obfuscated Python
 
 on:
   workflow_dispatch:
 
 jobs:
-  decode-job:
+  decode:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Decode obfuscated script
+      - name: Decode and extract source
         run: |
           python3 << 'EOF'
           import base64
@@ -18,43 +18,43 @@ jobs:
           import re
 
           with open('stripe.py', 'r') as f:
-              data = f.read()
+              content = f.read()
 
-          match = re.search(r"b(['\"])(.*?)\\1", data, re.DOTALL)
+          # Tìm chuỗi base64 bắt đầu bằng b' hoặc b"
+          # Ưu tiên dấu nháy đơn trước
+          match = re.search(r"b'([^']*)'", content)
           if not match:
-              print("❌ Không tìm thấy chuỗi base64.")
+              match = re.search(r'b"([^"]*)"', content)
+
+          if not match:
+              print("❌ Không tìm thấy chuỗi base64. Kiểm tra lại nội dung file.")
+              # In ra 200 ký tự đầu để debug
+              print("Nội dung file (đầu):", content[:200])
               exit(1)
 
-          b64_str = match.group(2)
-          print(f"✅ Đã trích xuất chuỗi base64 (độ dài: {len(b64_str)})")
+          b64_str = match.group(1)
+          print(f"✅ Đã tìm thấy base64, độ dài: {len(b64_str)}")
 
+          # Giải mã
           compressed = base64.b64decode(b64_str)
-          print(f"✅ Đã giải mã base64 (độ dài: {len(compressed)} bytes)")
+          decompressed = zlib.decompress(compressed)
+          source_code = decompressed.decode('utf-8')
 
-          try:
-              decompressed = zlib.decompress(compressed)
-          except Exception as e:
-              print(f"❌ Lỗi giải nén zlib: {e}")
-              exit(1)
-
-          try:
-              source_code = decompressed.decode('utf-8')
-          except UnicodeDecodeError:
-              print("⚠️ Không decode được UTF-8, thử latin-1")
-              source_code = decompressed.decode('latin-1')
-
-          with open('decoded_source.py', 'w') as out:
+          # Lưu ra file
+          with open('decoded_stripe.py', 'w') as out:
               out.write(source_code)
 
+          # In ra log để xem ngay
           print("\n" + "="*60)
-          print("📜 MÃ NGUỒN GỐC (DECODED):")
+          print("📜 MÃ NGUỒN SAU KHI GIẢI MÃ:")
           print("="*60)
           print(source_code)
           print("="*60)
+
           EOF
 
-      - name: Upload decoded source as artifact
+      - name: Upload decoded file
         uses: actions/upload-artifact@v4
         with:
           name: decoded-source
-          path: decoded_source.py
+          path: decoded_stripe.py

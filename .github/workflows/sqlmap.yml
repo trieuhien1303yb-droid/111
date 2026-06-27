@@ -1,7 +1,7 @@
 name: Decode and Extract Payload
 
 on:
-  workflow_dispatch:  # Chạy thủ công, không tự động
+  workflow_dispatch:
 
 jobs:
   decode-job:
@@ -11,19 +11,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Decode obfuscated script
-        id: decode
         run: |
           python3 << 'EOF'
           import base64
           import zlib
           import re
 
-          # Đọc file stripe.py
           with open('stripe.py', 'r') as f:
               data = f.read()
 
-          # Tìm chuỗi base64 nằm trong b'...'
-          # Mẫu có thể là b'eJzt...' hoặc b"eJzt..."
           match = re.search(r"b(['\"])(.*?)\\1", data, re.DOTALL)
           if not match:
               print("❌ Không tìm thấy chuỗi base64.")
@@ -32,37 +28,29 @@ jobs:
           b64_str = match.group(2)
           print(f"✅ Đã trích xuất chuỗi base64 (độ dài: {len(b64_str)})")
 
-          # Giải mã base64 -> dữ liệu nén
           compressed = base64.b64decode(b64_str)
           print(f"✅ Đã giải mã base64 (độ dài: {len(compressed)} bytes)")
 
-          # Giải nén zlib
           try:
               decompressed = zlib.decompress(compressed)
           except Exception as e:
               print(f"❌ Lỗi giải nén zlib: {e}")
               exit(1)
 
-          # Chuyển sang chuỗi UTF-8 (giả định mã nguồn Python)
           try:
               source_code = decompressed.decode('utf-8')
           except UnicodeDecodeError:
               print("⚠️ Không decode được UTF-8, thử latin-1")
               source_code = decompressed.decode('latin-1')
 
-          # Ghi ra file để tải về
           with open('decoded_source.py', 'w') as out:
               out.write(source_code)
 
-          # In ra màn hình log để xem ngay
           print("\n" + "="*60)
           print("📜 MÃ NGUỒN GỐC (DECODED):")
           print("="*60)
           print(source_code)
           print("="*60)
-
-          # Lưu vào biến môi trường để dùng sau (nếu cần)
-          echo "DECODED_SUCCESS=true" >> $GITHUB_ENV
           EOF
 
       - name: Upload decoded source as artifact
@@ -70,8 +58,3 @@ jobs:
         with:
           name: decoded-source
           path: decoded_source.py
-
-      - name: Show summary
-        if: success()
-        run: |
-          echo "✅ Giải mã thành công! Hãy tải file 'decoded-source' từ phần Artifacts bên dưới."
